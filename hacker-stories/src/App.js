@@ -41,29 +41,31 @@ const initialStories = [
   },
 ];
 
-const getAsyncStories = ( )=> {
-  return new Promise( ( resolve )=> setTimeout( 
-    resolve( { data : { stories: initialStories} } ) ),
-    2000
-    );
-}
+const getAsyncStories = () =>
+  new Promise(
+    (resolve) =>
+      setTimeout(() => resolve({ data: { stories: initialStories } })),
+    200000
+  );
 
 const App = () => {
   console.log(" App renders ");
+  const [stories, setStories] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isError, setIsError] = React.useState(false);
 
+  React.useEffect(() => {
+    setIsLoading(true);
+    getAsyncStories().then((result) => {
+      setStories(result.data.stories);
+      setIsLoading(false);
+    }).catch( ()=> setIsError(true) );
+  }, []);
 
-  const [stories, setStories] = React.useState( [] );
-
-  React.useEffect( ( )=> {
-    getAsyncStories().then( result => {
-      setStories( result.data.stories);
-    })
-  },
-[]
-  );
-
-  const handleRemoveStory = ( item )=> {
-    const newStories = stories.filter( ( story )=> item.objectID !== story.objectID );
+  const handleRemoveStory = (item) => {
+    const newStories = stories.filter(
+      (story) => item.objectID !== story.objectID
+    );
     setStories(newStories);
   };
 
@@ -96,7 +98,15 @@ const App = () => {
       <hr />
 
       {/* render the list */}
-      <List list={searchedStories} onRemoveItem={handleRemoveStory}/>
+      { isError && <p>Something went wrong ...</p>}
+      {
+        isLoading ? (
+          <p>Loading...</p>
+        ) : (
+          <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+        )
+      }
+      
     </div>
   );
 };
@@ -105,21 +115,14 @@ const List = ({ list, onRemoveItem }) => {
   console.log(" List renders ");
   return (
     <ul>
-      {
-        list.map( ( item )=> (
-          <Item 
-            key={item.objectID} 
-            item={item} 
-            onRemoveItem={onRemoveItem}
-          />
-        ))
-      }
+      {list.map((item) => (
+        <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+      ))}
     </ul>
   );
 };
 
-const Item = ( { item, onRemoveItem } )=> {
-
+const Item = ({ item, onRemoveItem }) => {
   return (
     <li>
       <span>
@@ -129,7 +132,7 @@ const Item = ( { item, onRemoveItem } )=> {
       <span>{item.num_comments}</span>
       <span>{item.points}</span>
       <span>
-        <button type="button" onClick={ ( )=> onRemoveItem(item) } >
+        <button type="button" onClick={() => onRemoveItem(item)}>
           Dismiss
         </button>
       </span>
