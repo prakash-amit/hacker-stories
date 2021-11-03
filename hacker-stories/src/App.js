@@ -67,24 +67,36 @@ const App = () => {
   });
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
 
-  React.useEffect(() => {
-    if( searchTerm.length >= 0 ) {
-      dispatchStories( { type: 'STORIES_FETCH_INIT' });
+  /*
+  * chage : searchTerm
+  * implicit change by useCallback : handleFetchStories
+  * run : side-effect
+  */
 
-      fetch( `${API_ENDPOINT}${searchTerm}`).then( 
-        (response)=> response.json()).then(
-          (result)=> {
-            dispatchStories(
-              {
-                type: 'STORIES_FETCH_SUCCESS',
-                payload: result
-              }
-            )
-            console.log( result );
-          }
-        ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
-    }  
-  }, [searchTerm]);
+  const handleFetchStories = React.useCallback( 
+    () => {
+      if( searchTerm.length >= 0 ) {
+        dispatchStories( { type: 'STORIES_FETCH_INIT' });
+  
+        fetch( `${API_ENDPOINT}${searchTerm}`).then( 
+          (response)=> response.json()).then(
+            (result)=> {
+              dispatchStories(
+                {
+                  type: 'STORIES_FETCH_SUCCESS',
+                  payload: result
+                }
+              )
+              console.log( result );
+            }
+          ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
+      } 
+    }, [searchTerm]
+  );
+
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleRemoveStory = (item) => {
     dispatchStories({
