@@ -65,8 +65,6 @@ const App = () => {
     isLoading: false,
     isError: false,
   });
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
 
   React.useEffect(() => {
