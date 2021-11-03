@@ -22,7 +22,7 @@ const useSemiPersistentState = (key, initialState) => {
   return [value, setValue];
 };
 
-const API_ENDPOINT = "https://localhost:5001/api/Books"
+const API_ENDPOINT = "https://localhost:5001/api/Books?name="
 
 //a reducer function
 const storiesReducer = (state, action) => {
@@ -67,24 +67,26 @@ const App = () => {
   });
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
 
   React.useEffect(() => {
-    dispatchStories( { type: 'STORIES_FETCH_INIT' });
+    if( searchTerm.length >= 0 ) {
+      dispatchStories( { type: 'STORIES_FETCH_INIT' });
 
-    fetch( `${API_ENDPOINT}`).then( 
-      (response)=> response.json()).then(
-        (result)=> {
-          dispatchStories(
-            {
-              type: 'STORIES_FETCH_SUCCESS',
-              payload: result
-            }
-          )
-          console.log( result );
-        }
-      ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
-    
-  }, []);
+      fetch( `${API_ENDPOINT}${searchTerm}`).then( 
+        (response)=> response.json()).then(
+          (result)=> {
+            dispatchStories(
+              {
+                type: 'STORIES_FETCH_SUCCESS',
+                payload: result
+              }
+            )
+            console.log( result );
+          }
+        ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
+    }  
+  }, [searchTerm]);
 
   const handleRemoveStory = (item) => {
     dispatchStories({
@@ -93,7 +95,7 @@ const App = () => {
     });
   };
 
-  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
+  
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -101,10 +103,6 @@ const App = () => {
   React.useEffect(() => {
     localStorage.setItem("search", searchTerm);
   }, [searchTerm]);
-
-  const searchedStories = stories.data.filter((story) => {
-    return story.Name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
 
   return (
     <div>
@@ -126,7 +124,7 @@ const App = () => {
       {stories.isLoading ? (
         <p>Loading...</p>
       ) : (
-        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+        <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
   );
