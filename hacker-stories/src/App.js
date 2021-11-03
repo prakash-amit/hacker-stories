@@ -1,4 +1,5 @@
 import * as React from "react";
+import axios from 'axios';
 
 const welcome = {
   greeting: "Welcome to",
@@ -79,14 +80,13 @@ const App = () => {
   const handleFetchStories = React.useCallback(() => {
       dispatchStories({ type: "STORIES_FETCH_INIT" });
 
-      fetch(url)
-        .then((response) => response.json())
+      axios.get(url)
         .then((result) => {
           dispatchStories({
             type: "STORIES_FETCH_SUCCESS",
-            payload: result,
+            payload: result.data,
           });
-          console.log(result);
+          console.log(result.data);
         })
         .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
   }, [url]);
