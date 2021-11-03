@@ -22,7 +22,7 @@ const useSemiPersistentState = (key, initialState) => {
   return [value, setValue];
 };
 
-const API_ENDPOINT = "https://localhost:5001/api/Books?name="
+const API_ENDPOINT = "https://localhost:5001/api/Books?name=";
 
 //a reducer function
 const storiesReducer = (state, action) => {
@@ -31,28 +31,26 @@ const storiesReducer = (state, action) => {
       return {
         ...state,
         isLoading: true,
-        isError: false
+        isError: false,
       };
     case "STORIES_FETCH_SUCCESS":
       return {
         ...state,
         isLoading: false,
         isError: false,
-        data: action.payload
+        data: action.payload,
       };
     case "STORIES_FETCH_FAILURE":
       return {
         ...state,
         isLoading: false,
-        isError: true
+        isError: true,
       };
-      case "REMOVE_STORY":
-        return {
-          ...state,
-          data: state.data.filter(
-            (story) => action.payload.Id !== story.Id
-          )
-        };              
+    case "REMOVE_STORY":
+      return {
+        ...state,
+        data: state.data.filter((story) => action.payload.Id !== story.Id),
+      };
     default:
       return new Error();
   }
@@ -65,34 +63,33 @@ const App = () => {
     isLoading: false,
     isError: false,
   });
-  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
+  const [searchTerm, setSearchTerm] = useSemiPersistentState(
+    "search",
+    "Design"
+  );
+
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`);
 
   /*
-  * chage : searchTerm
-  * implicit change by useCallback : handleFetchStories
-  * run : side-effect
-  */
+   * chage : searchTerm
+   * implicit change by useCallback : handleFetchStories
+   * run : side-effect
+   */
 
-  const handleFetchStories = React.useCallback( 
-    () => {
-      if( searchTerm.length >= 0 ) {
-        dispatchStories( { type: 'STORIES_FETCH_INIT' });
-  
-        fetch( `${API_ENDPOINT}${searchTerm}`).then( 
-          (response)=> response.json()).then(
-            (result)=> {
-              dispatchStories(
-                {
-                  type: 'STORIES_FETCH_SUCCESS',
-                  payload: result
-                }
-              )
-              console.log( result );
-            }
-          ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
-      } 
-    }, [searchTerm]
-  );
+  const handleFetchStories = React.useCallback(() => {
+      dispatchStories({ type: "STORIES_FETCH_INIT" });
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((result) => {
+          dispatchStories({
+            type: "STORIES_FETCH_SUCCESS",
+            payload: result,
+          });
+          console.log(result);
+        })
+        .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
+  }, [url]);
 
   React.useEffect(() => {
     handleFetchStories();
@@ -105,9 +102,12 @@ const App = () => {
     });
   };
 
-  
-  const handleSearch = (event) => {
+  const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleSearchSubmit = ()=> {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
   };
 
   React.useEffect(() => {
@@ -123,10 +123,14 @@ const App = () => {
         label="Search"
         value={searchTerm}
         isFocused
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
+
+      <button type="button" disabled={searchTerm.lenght >=0 } onClick={handleSearchSubmit}>
+        Submit
+      </button>
       <hr />
 
       {/* render the list */}
@@ -154,9 +158,7 @@ const List = ({ list, onRemoveItem }) => {
 const Item = ({ item, onRemoveItem }) => {
   return (
     <li>
-      <span>
-        {item.Name}
-      </span>
+      <span>{item.Name}</span>
       <span>{item.Author}</span>
       <span>{item.Price}</span>
       <span>
