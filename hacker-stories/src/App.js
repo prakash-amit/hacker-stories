@@ -1,8 +1,8 @@
 import * as React from "react";
 
 const welcome = {
-  greeting: "Hey",
-  title: "React",
+  greeting: "Welcome to",
+  title: "My Library",
 };
 
 function getTitle() {
@@ -22,29 +22,7 @@ const useSemiPersistentState = (key, initialState) => {
   return [value, setValue];
 };
 
-const initialStories = [
-  {
-    title: "React",
-    url: "https://reactjs.org/",
-    author: "Jordan Walke",
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: "Redux",
-    url: "https://redux.js.org/",
-    author: "Dan Abramov, Andrew Clark",
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-];
-
-const getAsyncStories = () =>
-  new Promise((resolve, reject) =>
-    setTimeout(() => resolve({ data: { stories: initialStories } }), 10000)
-  );
+const API_ENDPOINT = "https://localhost:5001/api/Books"
 
 //a reducer function
 const storiesReducer = (state, action) => {
@@ -72,7 +50,7 @@ const storiesReducer = (state, action) => {
         return {
           ...state,
           data: state.data.filter(
-            (story) => action.payload.objectID !== story.objectID
+            (story) => action.payload.Id !== story.Id
           )
         };              
     default:
@@ -92,15 +70,20 @@ const App = () => {
 
   React.useEffect(() => {
     dispatchStories( { type: 'STORIES_FETCH_INIT' });
-    getAsyncStories()
-      .then((result) => {
-        dispatchStories({
-          type: "STORIES_FETCH_SUCCESS",
-          payload: result.data.stories,
-        });
-        setIsLoading(false);
-      })
-      .catch(() => dispatchStories( { type: 'STORIES_FETCH_FAILURE' }));
+
+    fetch( `${API_ENDPOINT}`).then( 
+      (response)=> response.json()).then(
+        (result)=> {
+          dispatchStories(
+            {
+              type: 'STORIES_FETCH_SUCCESS',
+              payload: result
+            }
+          )
+          console.log( result );
+        }
+      ).catch( () => dispatchStories({ type: 'STORIES_FETCH_FAILURE'}))
+    
   }, []);
 
   const handleRemoveStory = (item) => {
@@ -110,7 +93,7 @@ const App = () => {
     });
   };
 
-  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "Design");
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -120,7 +103,7 @@ const App = () => {
   }, [searchTerm]);
 
   const searchedStories = stories.data.filter((story) => {
-    return story.title.toLowerCase().includes(searchTerm.toLowerCase());
+    return story.Name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -154,7 +137,7 @@ const List = ({ list, onRemoveItem }) => {
   return (
     <ul>
       {list.map((item) => (
-        <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+        <Item key={item.Id} item={item} onRemoveItem={onRemoveItem} />
       ))}
     </ul>
   );
@@ -164,11 +147,10 @@ const Item = ({ item, onRemoveItem }) => {
   return (
     <li>
       <span>
-        <a href={item.url}>{item.title}</a>
+        {item.Name}
       </span>
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{item.points}</span>
+      <span>{item.Author}</span>
+      <span>{item.Price}</span>
       <span>
         <button type="button" onClick={() => onRemoveItem(item)}>
           Dismiss
